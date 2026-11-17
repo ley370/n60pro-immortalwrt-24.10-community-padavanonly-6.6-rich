@@ -1,0 +1,41 @@
+#!/bin/sh
+# 99-n60pro-defaults - first-boot settings for the N60 Pro custom build
+# Runs once on first boot, then deletes itself.
+#
+# v4: use `uci -q` (quiet) so a single failing line cannot abort the script
+# or block its deletion (a uci-defaults script that exits non-zero may be
+# kept and re-run on every boot, overwriting manual changes). The script
+# always ends with `exit 0`.
+
+# 2026-11-18: default LAN 192.168.6.1/24 (DECIDED 2026-11-17 23:21 user: LAN keep 6.1;
+# B #4 running firmware is already 6.1, its 10.1 line did not take effect.
+# DHCP range/lease stay at defaults (start 100, limit 150), so clients get
+# 192.168.6.100-249 with gateway 192.168.6.1. AP (Xiaomi BE6500) fixed 192.168.6.2 -- not set here.
+# This only applies on first boot of a fresh flash (script deletes itself);
+# it does not change the LAN of an already-running router.
+uci -q set network.lan.ipaddr='192.168.6.1'
+uci -q commit network
+
+# Disable wireless by default (wired main router; AP is a separate Xiaomi BE6500)
+uci -q set wireless.radio0.disabled='1'
+uci -q set wireless.radio1.disabled='1'
+uci -q commit wireless
+
+# Timezone + NTP (2026-11-16, borrowed from coolsnowwolf/lede zzz-default-settings):
+# default is UTC; set Asia/Shanghai and domestic NTP so logs/schedules are local time.
+uci -q set system.@system[0].timezone='CST-8'
+uci -q set system.@system[0].zonename='Asia/Shanghai'
+uci -q delete system.ntp.server
+uci -q add_list system.ntp.server='ntp1.aliyun.com'
+uci -q add_list system.ntp.server='ntp.tencent.com'
+uci -q add_list system.ntp.server='ntp.ntsc.ac.cn'
+uci -q add_list system.ntp.server='time.apple.com'
+uci -q commit system
+
+# Default LuCI theme: Argon
+uci -q set luci.main.mediaurlbase='/luci-static/argon'
+# Default LuCI language: Simplified Chinese
+uci -q set luci.main.lang='zh_cn'
+uci -q commit luci
+
+exit 0
