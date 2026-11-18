@@ -1,85 +1,76 @@
-# N60 Pro 丰富版（rich）— ImmortalWrt 24.10-6.6 社区版
+# N60 Pro 丰富版 (rich) — ImmortalWrt 24.10-6.6
 
-状态：已编成 #4（2026-11-18 17:38，100 包含 iStore）；简洁版已废弃（2026-11-18 22:46 用户定）。丰富版待同步标准版 #6 的两项修法（NAS 菜单并入服务、无线默认关），改完暂不重编。
+基于 padavanonly/immortalwrt-mt798x-6.6（分支 openwrt-24.10-6.6）的定制固件，面向磊科 N60 Pro（512MB 内存 / 128MB 闪存），有线主路由用途，无线默认关闭。
 
-# N60 Pro ImmortalWrt 云编译（GitHub Actions）
+## 底版
 
-为磊科 N60 Pro（512MB / 128MB）定制的 ImmortalWrt 24.10-6.6 固件，基于社区版 padavanonly/immortalwrt-mt798x-6.6（分支 openwrt-24.10-6.6）编译。
+- ImmortalWrt 24.10，内核 6.6 LTS，包管理 opkg
+- MTK 闭源加速栈：HNAT + WARP + TurboACC-MTK（WARP_CHIPSET=mt7986）
+- 闭源 mt_wifi 驱动（已装，默认关闭）
 
-这是社区版对照库：内核 6.6 LTS、MTK 闭源加速栈（HNAT＋WARP＋TurboACC-MTK）、包管理 opkg。注意：本库按有线主路由配，无线功能装了闭源 mt_wifi 驱动（参考 padavanonly mt7986-ax6000 配置），但默认关闭——注意：99-defaults 里 radio0/radio1 的写法是错的，mt_wifi 实际的节区名是 MT7986_1_1/2（标准版 #6 已修，丰富版待同步改）；要开无线时在 LuCI 里启用两个 radio、设 SSID/密码即可，不用重刷。
-插件清单与 v13 基本一致（PassWall2+sing-box、AdGuardHome、Argon 等），加速改用 MTK 版：kmod-mediatek_hnat + kmod-warp + luci-app-turboacc-mtk（WARP_CHIPSET=mt7986），QoS 改用 luci-app-eqos-mtk；官方 luci-app-turboacc 与 luci-app-eqos 已停用（与 MTK 版互斥）。2026-11-16 整改：首版没开 HNAT 导致内核编译失败（9999-01-hnat.patch 引用 7 个符号，定义只在 HNAT 开启时才引入），本次按 padavanonly mt7986-nowifi 配置补齐 HNAT/WARP/TurboACC-MTK。风险待实机验证：硬件 NAT 可能绕过 PassWall2/AdGuardHome。
-注意：你是纯有线主路由、WiFi 默认关，闭源 WiFi/WARP 的优势基本用不上；这是本库要验证的点。社区版上游是 padavanonly 个人维护，更新节奏与官方不同，闭源驱动出问题难调试。
-本库默认 LAN 为 192.168.6.1（99-defaults 在首次启动时写成 6.1；2026-11-17 用户定保持 6.1）。
+## 最新构建
 
-## 包含内容
+- #4：100 个包，sysupgrade `.bin` 49,449,773 字节，SHA256 `64530021332a3283147b0006444daeccde54a50ecda70b6ca91e018ecb77b4af`，sha256sums 12/12，manifest 441 行
+- 仓库当前脚本含两项修正（NAS 菜单并入服务、无线默认关双保险），尚未重编；下一轮构建以构建页产物为准
 
-- 基础：LuCI、防火墙、PPPoE、DHCP/DNS、IPv6、WiFi 驱动、USB、SSH
-- 主题：Argon（默认主题，中文；官方源自带）
-- 代理：PassWall2 + sing-box（v12 起替换 PassWall1，URLTest/leastPing 自动选优＋故障切换）
-- 去广告：AdGuardHome
-- DNS：AdGuardHome 过滤 + PassWall2 国内外分流（SmartDNS 已去掉，避免四层 DNS 串联）
-- VPN：WireGuard（内置于网络接口）
-- DDNS、Attended Sysupgrade（升级保留软件包）、nlbwmon、WoL、UPnP（用户要求增加，刷后在 服务 → UPnP 里启用）
-- 加速：MTK 硬件加速（HNAT + WARP + TurboACC-MTK，WARP_CHIPSET=mt7986）+ BBR 拥塞控制（kmod-tcp-bbr）
-- 限速：eqos（官方源，轻量按 IP 限速；QoSmate 已去掉，与硬件加速互斥）
-- IPTV：igmpproxy + udpxy
-- 应用商店：iStore（luci-app-store，2026-11-18 用户决定丰富版加；diy-part1.sh 加 istore 源）
-- 监控：CPU 温度显示；网页终端 ttyd；设备上网控制；断网看门狗 watchcat
-- USB 存储驱动：block-mount、kmod-usb-storage、kmod-usb-storage-uas、kmod-usb3、kmod-fs-ext4、e2fsprogs（128MB 闪存紧张时可插 U 盘扩容 /overlay；UAS 让 USB 3.0 跑满速，e2fsprogs 可在路由器上直接把 U 盘格成 ext4）
-- 无线默认关闭（有线主路由）
+## 插件清单
 
-## 使用方法
+| 功能 | 插件 |
+|---|---|
+| 代理 | PassWall2 + sing-box（只留 sing-box 内核）；HAProxy 负载均衡已开，自动切换在 LuCI 里配 |
+| 去广告 | AdGuardHome（无 LuCI 界面，用其自带网页管理） |
+| 备选去广告 / DNS | adblock、SmartDNS（已装，默认不启用；与 AdGuardHome 二选一，不同时跑） |
+| 加速 | TurboACC-MTK + HNAT + WARP + BBR |
+| 限速 | eqos-mtk；SQM + cake（已装，默认不启用；启用前须关 HNAT） |
+| IPTV | igmpproxy + udpxy；mcproxy（备选，默认不启用） |
+| USB / 磁盘 | block-mount、usb-storage(-uas)、usb3、ext4、f2fs、vfat、exfat、ntfs3（内核）、diskman、hd-idle、parted、e2fsprogs |
+| 应用商店 | iStore（luci-app-store，istore 源） |
+| 网络管理 | arpbind、opkg 界面、vnstat2、statistics、banip、DDNS、UPnP、WoL、WireGuard（luci-proto-wireguard + wireguard-tools） |
+| 系统 | Argon 主题（默认，中文）、attendedsysupgrade、nlbwmon、ttyd、watchcat、accesscontrol、temp-status |
 
-1. 在 GitHub 上新建一个仓库（Public，名字任意，如 `n60pro-immortalwrt`）
-2. 把本目录里的全部文件上传到仓库根目录（保持目录结构，尤其是 `.github/workflows/build.yml`）
-3. 打开仓库的 Actions 页面，点左侧 "Build ImmortalWrt N60 Pro"，点 "Run workflow"，确认
-4. 等待编译完成（首次约 1–2 小时，GitHub 免费额度内）
-5. 编译成功后，在该次运行的 Artifacts 里下载固件压缩包，解压得到 `immortalwrt-...-netcore_n60-pro-squashfs-sysupgrade.bin`
-6. 用该 `.bin` 走 U-Boot 网页恢复页直刷（本版只有 `.bin`，没有 `.itb`）
+未包含：Samba / Transmission（NAS 已有）、QoSmate（与 HNAT 互斥）、OpenClash / Nikki / HomeProxy（代理核心只留 PassWall2）、文件浏览器（本版没有）。
+
+## 默认设置
+
+- LAN：192.168.6.1/24，DHCP 默认（客户端 192.168.6.100–249）
+- 无线：默认关闭（两个射频均 disabled；开无线在 LuCI 里启用并设 SSID/密码）
+- root：无密码，首次进 LuCI 后立即设置
+- 时区：Asia/Shanghai（CST-8），NTP 为国内服务器
+- LuCI：Argon 主题，简体中文
+
+## 刷机
+
+产物只有 sysupgrade `.bin`，走 U-Boot 网页恢复页直刷；没有 `.itb`。
+
+刷机前备份节点（订阅链接/截图）与 LuCI 备份：旧 PassWall 配置不会自动迁移到 PassWall2，节点须重建；建议不保留设置。
+
+## 刷后检查
+
+1. 设管理员密码。
+2. 确认无线两个射频均为禁用。
+3. 服务菜单里应有“硬盘休眠”；不应再有顶级 NAS 菜单。
+4. AdGuardHome 用其自带网页管理（本版无 LuCI 界面）；只启用一个 init 脚本。
+5. PassWall2 自动切换在 LuCI 里配：负载均衡组（leastPing，设为默认节点）或给主节点挂备用节点开自动切换。
+6. 测 HNAT 是否绕过 PassWall2 与 AdGuardHome（硬件加速可能使代理/DNS 旁路，须实机验证）。
 
 ## 注意事项
 
-- 首次编译时间较长，请耐心等待；如果失败，点进失败的步骤看日志。
-- Turbo ACC 走 MTK 版（luci-app-turboacc-mtk），官方版已停用；硬件 NAT 可能绕过代理/DNS，刷机后须实测 PassWall2 与 AdGuardHome。
-- AdGuardHome 的中文语言包官方源没有，已在配置里列出 `luci-i18n-adguardhome-zh-cn`，有源提供就打进去，没有则自动跳过、AdGuardHome 用英文界面。
-- v4 已去掉的包：SmartDNS（与 AdGuardHome + PassWall 重复）、QoSmate（与硬件加速互斥）、luci-app-statistics（collectd + rrdtool 体积大，已有 nlbwmon）。如需用，刷机后用 LuCI → 系统 → 软件包或 `opkg update && opkg install <包名>` 自行安装。
-- v5 补充：USB 驱动加了 kmod-usb-storage-uas（UASP）和 e2fsprogs（mkfs.ext4）；删了 chenmozhijin 专属的 TURBOACC_INCLUDE_* 两行，改加官方 kmod-tcp-bbr。
-- v8 补充：PassWall 默认的 Shadowsocks-Rust 子选项已关（它会在 aarch64 上默认拉起庞大的 Rust 工具链；sing-box 已原生支持 Shadowsocks，含 SS-2022）。diy-part2.sh 里仍保留 download-ci-llvm 改 false 的兜底（万一仍有包拉起 Rust，编译不会再因 CI 产物 404 失败）。
-- v9 补充：PassWall 只留 sing-box 一个内核。PassWall 在 aarch64 上默认同时勾 xray-core 和 sing-box（各 25–35MB），128MB 闪存只留 sing-box；另关 PassWall 的 SmartDNS 子选项（它默认 y，会把 v4 删掉的 smartdns 又拉回来）。
-- v10 补充：加 ccache（`CONFIG_CCACHE=y`＋工作流缓存 `~/.ccache`，上限 5G；首次编译仍慢，之后小改重编快得多）；补 LuCI 基础与防火墙中文包（`luci-i18n-base-zh-cn`、`luci-i18n-firewall-zh-cn`，否则主菜单仍显示英文）。
-- v11 补充：补 `CONFIG_CCACHE_DIR="/home/runner/.ccache"`。OpenWrt 默认把缓存写进源码目录下的 `.ccache`，不指定就会和工作流缓存的 `~/.ccache` 对不上号、重编命中不了缓存；不加不影响本次编译和固件功能，只影响下次重编速度。
-- v12 补充：PassWall1 换 PassWall2。①diy-part1.sh 加两个源：`passwall2`（Openwrt-Passwall/openwrt-passwall2，main）＋`passwall_packages`（xiaorouji/openwrt-passwall-packages，main，提供 chinadns-ng/tcping/geoview 等官方源没有的依赖）；PassWall2 不在官方源，不加这两个源编译会找不到包。②n60-pro.config 删 PassWall1 全套、只留 PassWall2（不双装：省闪存、避免两个透明代理打架）。③核心只留 sing-box（PassWall2 默认 All 会同时拉 xray-core＋sing-box，各 25–35MB，128MB 闪存放不下）；关 Haproxy（负载均衡走 sing-box urltest，不走 Haproxy）、关 Shadowsocks-Rust（会拉 Rust 工具链，即 #2 编译失败的 CI LLVM 404 根因；sing-box 已原生支持 SS/SS-2022）、关 SSR/Simple-Obfs/V2ray-Plugin（VLESS 节点用不上）。④刷机后节点须在 PassWall2 里重建：旧 `/etc/config/passwall` 不自动迁移到 `/etc/config/passwall2`，订阅链接重加最省事；刷前先备份节点（订阅链接/截图）和 LuCI 备份。⑤刷 v12 建议不保留设置（旧 PassWall/dnsmasq 配置残留会干扰），刷后重设 root 密码、再加 PassWall2 节点；LAN 不用重改了，见 v13。
-- v13 补充：默认 LAN 改为 192.168.10.1/24（方案 B：光猫保持路由模式，N60 不拨号，原 192.168.1.1 与光猫 LAN 冲突）。改在 `files/etc/uci-defaults/99-n60pro-defaults` 里，首次启动时写 `network.lan.ipaddr='192.168.10.1'`；DHCP 沿用默认（起始 100、上限 150），客户端拿 192.168.10.100–249、网关 192.168.10.1。只影响新刷的固件首次启动，不改已在跑的路由器；刷 v13 不保留设置后直接用 http://192.168.10.1 进 LuCI。注意：U-Boot 网页恢复页仍是 192.168.1.1，那是 U-Boot 自己的地址，不受此改动影响，别混淆。
-- v14 补充：工作流三个 action 升版去 Node 20 警告：`actions/checkout@v4→@v5`、`actions/cache@v4→@v5`、`actions/upload-artifact@v4→@v6`。注意 upload-artifact 不能只升到 v5——已按各 tag 的 action.yml 逐项核对 `runs.using`，v5 仍是 `node20`，只有 v6 起才是 `node24`；checkout v5、cache v5 均为 `node24`。只改 build.yml，固件配置不变；重编只是为了消警告，#4 的固件本身没问题，不必为此重刷。
-- v15 补充（2026-11-18，用户决定丰富版加）：iStore 应用商店（luci-app-store 0.2.1-r1）+ istore 源（linkease/istore main 分支，diy-part1.sh 里加；依赖 luci-lib-taskd 同在该源里）。刷机后在 LuCI → 服务 → 应用商店里装应用，iStore 自带应用源。注意：这与 11 月 15 日去掉第三方源的决定相反，只加在丰富版，简洁版与标准版没有 iStore；该包无中文语言包，前端 istore-ui 自带中文。
-- 后期直接装插件：可以。两种方式：① LuCI → 系统 → 软件包，搜官方源里的包安装；② SSH 上 `opkg update && opkg install <包名>`。前提是路由器已能上网（PPPoE 通）。官方/社区源 24.10 的包都能这样装（opkg 时代）。
-- 闪存提醒：N60 Pro 只有 128MB 闪存，sing-box（约 30MB）+ AdGuardHome（约 40MB）占了大头，刷机后 /overlay 剩余空间有限。后续更新 PassWall 规则库或 AdGuardHome 过滤列表时注意空间；空间紧张时可插 USB 3.0 U 盘扩容 /overlay（USB 驱动已编进固件）。
-- 固件默认 LAN 为 192.168.6.1/24，root 无密码（首次进 LuCI 后立即设密码），无线默认关闭。电脑须拿到 192.168.6.x 才能打开 http://192.168.6.1；之前设过固定 192.168.1.x 的先改回自动获取。
-- 每次重新运行都会拉取最新源码和软件包，相当于升级到最新 24.10。
-
-## 刷机格式说明（.bin 与 U-Boot）
-
-- 编译产物只有 `*-squashfs-sysupgrade.bin`，走 U-Boot 网页恢复页直刷；没有 `.itb`。
-- 当前路由器上的 821KB 标准版 U-Boot 已验证能正常引导 `.itb`（之前官方 25.12.2 的 `.itb` 就是这么刷起来并正常进 LuCI 的），一般不需要换 U-Boot。
-- 万一刷完重启卡住无法引导，再按住 Reset 键通电进 U-Boot 网页后台（192.168.1.1），换刷专用于 FIT 格式的 U-Boot 后重试。
+- 128MB 闪存：sing-box 约 30MB、AdGuardHome 约 40MB，/overlay 余量有限；空间紧张时插 USB 3.0 U 盘扩容 /overlay（USB 驱动已编进固件）。
+- NTFS 靠内核 ntfs3；ntfs-3g 与之冲突，不得加回。
+- adblock / SmartDNS / SQM / mcproxy 均为“装而不启用”，默认路径仍是 AdGuardHome + PassWall2 分流。
+- iStore 商店里的插件不一定都有 24.10 版本，装不上时改用 LuCI → 系统 → 软件包或 `opkg install`。
+- 每次重新运行都会拉取最新源码和软件包。
 
 ## 文件说明
 
-- `.github/workflows/build.yml`：GitHub Actions 工作流
+- `.github/workflows/build.yml`：GitHub Actions 工作流（仅手动触发）
 - `n60-pro.config`：编译配置（目标机型 + 软件包清单）
-- `diy-part1.sh`：第三方源（v12：passwall2＋passwall_packages，PassWall2 用；v15 丰富版加 istore 源，iStore 用；其余仍走官方源）
-- `diy-part2.sh`：编译后处理（Rust 编译修复：把 download-ci-llvm 改为 false，防 CI 产物 404）
-- `files/etc/uci-defaults/99-n60pro-defaults`：首次启动设置（默认 LAN 192.168.6.1、关无线、默认 Argon 主题、中文界面；已加 `uci -q` 容错）
+- `diy-part1.sh`：第三方源（passwall2、passwall_packages、istore）
+- `diy-part2.sh`：编译后处理（Rust 编译修复；NAS 菜单并入服务；mtwifi 生成默认禁用无线）
+- `files/etc/uci-defaults/99-n60pro-defaults`：首次启动设置（LAN 6.1、关无线、Argon、中文、时区）
 
-## 2026-11-18 丰富版现状（2026-11-18 晚更新）
-- 丰富版 #4 已编成（run 44259763796，2026-11-18 17:38，100 包含 iStore，`.bin` 49,449,773 字节，SHA256 `64530021…`，sha256sums 12/12，manifest 441 行）。
-- 简洁版已废弃（2026-11-18 22:46 用户定），库待删；本节原“先简洁后丰富”计划已过期。
-- 去广告保持 AdGuardHome，不换 adblock（用户 2026-11-18 晚定）。
-- 待同步标准版 #6 的两项修法（NAS 菜单并入服务、无线默认关双保险），改完暂不重编（用户 22:46 定）。
+## 构建记录
 
-## 2026-11-18 简洁版 / 丰富版（历史：DECIDED 2026-11-18 00:08，用户选两版都编，先简洁后丰富；另建独立库编译）
-- 底版：B #4 成功配置（commit d3a729e，run #4，1h29m，产物 85,454,482 字节，SHA256 2142efef…fe345）。
-- 两版共同改动（建议）：99-defaults 默认 LAN 由 192.168.10.1 改为 192.168.6.1——DECIDED（用户 2026-11-17 23:21：LAN 保持 6.1）；B #4 的 10.1 行实际未生效，当前运行的 B 版就是 6.1，新配置与实测一致。
-- 简洁版：只补 11 行（USB2/vfat/exfat/usbutils/diskman/arpbind/opkg），.bin 预估约 44–45MB。
-- 丰富版：简洁版 + 29 行（adblock/SmartDNS/HAProxy/NTFS/F2FS/mcproxy/SQM/statistics/vnstat2/banip/iStore 等），.bin 预估约 51–55MB（#2 实测 48.6MB，加 iStore 约 +3MB，未实测）；新增件装而不默认启用，二选一，冲突项已在配置注释里写明。
-- 编译顺序（建议）：同一 B 库逐个编，先简洁、验 manifest+SHA 再编丰富；每版约 1.5 小时，每小时检查。
+- #2：丰富版首次编成（99 包，`.bin` 48,620,333 字节）
+- #3：失败（ntfs-3g 与 kmod-fs-ntfs3 冲突，package/install Error 255）
+- #4：编成（100 包，含 iStore；ntfs-3g 已删）
