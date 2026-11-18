@@ -1,13 +1,15 @@
-# N60 Pro ImmortalWrt 24.10-6.6 社区版库（对照库 B，待确认）
+# N60 Pro 丰富版（rich）— ImmortalWrt 24.10-6.6 社区版
+
+状态：已编成 #4（2026-11-18 17:38，100 包含 iStore）；简洁版已废弃（2026-11-18 22:46 用户定）。丰富版待同步标准版 #6 的两项修法（NAS 菜单并入服务、无线默认关），改完暂不重编。
 
 # N60 Pro ImmortalWrt 云编译（GitHub Actions）
 
 为磊科 N60 Pro（512MB / 128MB）定制的 ImmortalWrt 24.10-6.6 固件，基于社区版 padavanonly/immortalwrt-mt798x-6.6（分支 openwrt-24.10-6.6）编译。
 
-这是社区版对照库：内核 6.6 LTS、MTK 闭源加速栈（HNAT＋WARP＋TurboACC-MTK）、包管理 opkg。注意：本库按有线主路由配，无线功能装了闭源 mt_wifi 驱动（参考 padavanonly mt7986-ax6000 配置），但默认关闭（99-defaults 置 wireless.radio0/radio1.disabled=1，mt_wifi 的 LuCI 读的就是这两个开关）；要开无线时在 LuCI 里启用两个 radio、设 SSID/密码即可，不用重刷。
+这是社区版对照库：内核 6.6 LTS、MTK 闭源加速栈（HNAT＋WARP＋TurboACC-MTK）、包管理 opkg。注意：本库按有线主路由配，无线功能装了闭源 mt_wifi 驱动（参考 padavanonly mt7986-ax6000 配置），但默认关闭——注意：99-defaults 里 radio0/radio1 的写法是错的，mt_wifi 实际的节区名是 MT7986_1_1/2（标准版 #6 已修，丰富版待同步改）；要开无线时在 LuCI 里启用两个 radio、设 SSID/密码即可，不用重刷。
 插件清单与 v13 基本一致（PassWall2+sing-box、AdGuardHome、Argon 等），加速改用 MTK 版：kmod-mediatek_hnat + kmod-warp + luci-app-turboacc-mtk（WARP_CHIPSET=mt7986），QoS 改用 luci-app-eqos-mtk；官方 luci-app-turboacc 与 luci-app-eqos 已停用（与 MTK 版互斥）。2026-11-16 整改：首版没开 HNAT 导致内核编译失败（9999-01-hnat.patch 引用 7 个符号，定义只在 HNAT 开启时才引入），本次按 padavanonly mt7986-nowifi 配置补齐 HNAT/WARP/TurboACC-MTK。风险待实机验证：硬件 NAT 可能绕过 PassWall2/AdGuardHome。
 注意：你是纯有线主路由、WiFi 默认关，闭源 WiFi/WARP 的优势基本用不上；这是本库要验证的点。社区版上游是 padavanonly 个人维护，更新节奏与官方不同，闭源驱动出问题难调试。
-本库默认 LAN 仍由 99-n60pro-defaults 在首次启动时写成 192.168.10.1（社区版源码默认是 192.168.6.1，别被它吓到）。
+本库默认 LAN 为 192.168.6.1（99-defaults 在首次启动时写成 6.1；2026-11-17 用户定保持 6.1）。
 
 ## 包含内容
 
@@ -32,8 +34,8 @@
 2. 把本目录里的全部文件上传到仓库根目录（保持目录结构，尤其是 `.github/workflows/build.yml`）
 3. 打开仓库的 Actions 页面，点左侧 "Build ImmortalWrt N60 Pro"，点 "Run workflow"，确认
 4. 等待编译完成（首次约 1–2 小时，GitHub 免费额度内）
-5. 编译成功后，在该次运行的 Artifacts 里下载固件压缩包，解压得到 `immortalwrt-...-netcore_n60-pro-squashfs-sysupgrade.itb`
-6. 用该 `.itb` 通过 LuCI「系统 → 备份/升级」或 sysupgrade 命令升级（不要用 U-Boot 网页恢复刷 `.itb`，那个只认特定格式；`.itb` 是给系统内升级用的）
+5. 编译成功后，在该次运行的 Artifacts 里下载固件压缩包，解压得到 `immortalwrt-...-netcore_n60-pro-squashfs-sysupgrade.bin`
+6. 用该 `.bin` 走 U-Boot 网页恢复页直刷（本版只有 `.bin`，没有 `.itb`）
 
 ## 注意事项
 
@@ -52,12 +54,12 @@
 - v15 补充（2026-11-18，用户决定丰富版加）：iStore 应用商店（luci-app-store 0.2.1-r1）+ istore 源（linkease/istore main 分支，diy-part1.sh 里加；依赖 luci-lib-taskd 同在该源里）。刷机后在 LuCI → 服务 → 应用商店里装应用，iStore 自带应用源。注意：这与 11 月 15 日去掉第三方源的决定相反，只加在丰富版，简洁版与标准版没有 iStore；该包无中文语言包，前端 istore-ui 自带中文。
 - 后期直接装插件：可以。两种方式：① LuCI → 系统 → 软件包，搜官方源里的包安装；② SSH 上 `opkg update && opkg install <包名>`。前提是路由器已能上网（PPPoE 通）。官方/社区源 24.10 的包都能这样装（opkg 时代）。
 - 闪存提醒：N60 Pro 只有 128MB 闪存，sing-box（约 30MB）+ AdGuardHome（约 40MB）占了大头，刷机后 /overlay 剩余空间有限。后续更新 PassWall 规则库或 AdGuardHome 过滤列表时注意空间；空间紧张时可插 USB 3.0 U 盘扩容 /overlay（USB 驱动已编进固件）。
-- 固件默认 LAN 为 192.168.10.1/24（v13 起），root 无密码（首次进 LuCI 后立即设密码），无线默认关闭。电脑须拿到 192.168.10.x 才能打开 http://192.168.10.1；之前设过固定 192.168.1.x 的先改回自动获取。
-- 每次重新运行都会拉取最新源码和软件包，相当于升级到最新 25.12。
+- 固件默认 LAN 为 192.168.6.1/24，root 无密码（首次进 LuCI 后立即设密码），无线默认关闭。电脑须拿到 192.168.6.x 才能打开 http://192.168.6.1；之前设过固定 192.168.1.x 的先改回自动获取。
+- 每次重新运行都会拉取最新源码和软件包，相当于升级到最新 24.10。
 
-## 刷机格式说明（.itb 与 U-Boot）
+## 刷机格式说明（.bin 与 U-Boot）
 
-- 编译产物是 `*-squashfs-sysupgrade.itb`（FIT 格式），用 LuCI 系统内升级刷入。
+- 编译产物只有 `*-squashfs-sysupgrade.bin`，走 U-Boot 网页恢复页直刷；没有 `.itb`。
 - 当前路由器上的 821KB 标准版 U-Boot 已验证能正常引导 `.itb`（之前官方 25.12.2 的 `.itb` 就是这么刷起来并正常进 LuCI 的），一般不需要换 U-Boot。
 - 万一刷完重启卡住无法引导，再按住 Reset 键通电进 U-Boot 网页后台（192.168.1.1），换刷专用于 FIT 格式的 U-Boot 后重试。
 
@@ -67,9 +69,15 @@
 - `n60-pro.config`：编译配置（目标机型 + 软件包清单）
 - `diy-part1.sh`：第三方源（v12：passwall2＋passwall_packages，PassWall2 用；v15 丰富版加 istore 源，iStore 用；其余仍走官方源）
 - `diy-part2.sh`：编译后处理（Rust 编译修复：把 download-ci-llvm 改为 false，防 CI 产物 404）
-- `files/etc/uci-defaults/99-n60pro-defaults`：首次启动设置（默认 LAN 192.168.10.1、关无线、默认 Argon 主题、中文界面；已加 `uci -q` 容错）
+- `files/etc/uci-defaults/99-n60pro-defaults`：首次启动设置（默认 LAN 192.168.6.1、关无线、默认 Argon 主题、中文界面；已加 `uci -q` 容错）
 
-## 2026-11-18 简洁版 / 丰富版（状态：DECIDED 2026-11-18 00:08，用户选两版都编，先简洁后丰富；另建独立库编译）
+## 2026-11-18 丰富版现状（2026-11-18 晚更新）
+- 丰富版 #4 已编成（run 44259763796，2026-11-18 17:38，100 包含 iStore，`.bin` 49,449,773 字节，SHA256 `64530021…`，sha256sums 12/12，manifest 441 行）。
+- 简洁版已废弃（2026-11-18 22:46 用户定），库待删；本节原“先简洁后丰富”计划已过期。
+- 去广告保持 AdGuardHome，不换 adblock（用户 2026-11-18 晚定）。
+- 待同步标准版 #6 的两项修法（NAS 菜单并入服务、无线默认关双保险），改完暂不重编（用户 22:46 定）。
+
+## 2026-11-18 简洁版 / 丰富版（历史：DECIDED 2026-11-18 00:08，用户选两版都编，先简洁后丰富；另建独立库编译）
 - 底版：B #4 成功配置（commit d3a729e，run #4，1h29m，产物 85,454,482 字节，SHA256 2142efef…fe345）。
 - 两版共同改动（建议）：99-defaults 默认 LAN 由 192.168.10.1 改为 192.168.6.1——DECIDED（用户 2026-11-17 23:21：LAN 保持 6.1）；B #4 的 10.1 行实际未生效，当前运行的 B 版就是 6.1，新配置与实测一致。
 - 简洁版：只补 11 行（USB2/vfat/exfat/usbutils/diskman/arpbind/opkg），.bin 预估约 44–45MB。
