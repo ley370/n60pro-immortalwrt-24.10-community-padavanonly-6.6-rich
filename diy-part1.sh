@@ -19,3 +19,8 @@
 # script idempotent if it ever runs twice.
 grep -q '^src-git passwall_packages ' feeds.conf.default || echo 'src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages.git;main' >> feeds.conf.default
 grep -q '^src-git passwall2 ' feeds.conf.default || echo 'src-git passwall2 https://github.com/Openwrt-Passwall/openwrt-passwall2.git;main' >> feeds.conf.default
+# iStore（2026-11-18 用户决定丰富版加）：luci-app-store + luci-lib-taskd。
+# 源：linkease/istore main 分支（已核实：luci/luci-app-store 0.2.1-r1，
+# 依赖 luci-lib-taskd 同在该源里；支持 ipk/opkg，24.10 用 ipk。
+# 跟 main 浮动、不钉哈希，见 B #2 教训）。
+grep -q '^src-git istore ' feeds.conf.default || echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
