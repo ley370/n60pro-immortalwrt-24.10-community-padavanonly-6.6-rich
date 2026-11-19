@@ -17,13 +17,14 @@ else
   echo "diy-part2: WARNING: ci-llvm pattern not found in feeds/packages/lang/rust/Makefile"
 fi
 
-# NAS menu merged into Services: luci-app-hd-idle registers its entry under
-# admin/nas; moving it to admin/services makes the top-level NAS menu disappear.
-# (This build has no p910nd, so only hd-idle is moved.)
+# NAS menu merged into Services: hd-idle and p910nd register their entries under
+# admin/nas; moving them to admin/services makes the top-level NAS menu disappear.
+# (2026-11-19: p910nd added by syncing with the standard edition, so it is moved too.)
 # menu.d only exists after feeds are installed, so this belongs in diy-part2.sh.
 sed -i 's|"admin/nas/hd_idle"|"admin/services/hd_idle"|' feeds/luci/applications/luci-app-hd-idle/root/usr/share/luci/menu.d/luci-app-hd-idle.json
-if grep -q '"admin/services/hd_idle"' feeds/luci/applications/luci-app-hd-idle/root/usr/share/luci/menu.d/luci-app-hd-idle.json; then
-  echo "diy-part2: NAS menu merged into Services (hd-idle)"
+sed -i 's|"admin/nas/p910nd"|"admin/services/p910nd"|' feeds/luci/applications/luci-app-p910nd/root/usr/share/luci/menu.d/luci-app-p910nd.json
+if grep -q '"admin/services/hd_idle"' feeds/luci/applications/luci-app-hd-idle/root/usr/share/luci/menu.d/luci-app-hd-idle.json && grep -q '"admin/services/p910nd"' feeds/luci/applications/luci-app-p910nd/root/usr/share/luci/menu.d/luci-app-p910nd.json; then
+  echo "diy-part2: NAS menu merged into Services (hd-idle, p910nd)"
 else
   echo "diy-part2: WARNING: NAS menu move failed (menu.d pattern not found)"
 fi
