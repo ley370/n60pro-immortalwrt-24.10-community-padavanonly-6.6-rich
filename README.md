@@ -10,10 +10,6 @@
 - MTK 闭源加速栈：HNAT + WARP + TurboACC-MTK（WARP_CHIPSET=mt7986）
 - 闭源 mt_wifi 驱动（已装，默认关闭）
 
-### 当前构建
-
-- #5：99 个包，sysupgrade `.bin` 49,449,773 字节，SHA256 `85b5da901c81dc4906baf93199f99311c55b878eb2bb122e97c9a27c2cd4f9ed`，sha256sums 12/12，manifest 441 行
-
 ### 默认设置
 
 - LAN：192.168.6.1/24，DHCP 默认（客户端 192.168.6.100–249）
@@ -25,7 +21,7 @@
 ### 文件说明
 
 - `.github/workflows/build.yml`：GitHub Actions 工作流（仅手动触发）
-- `n60-pro.config`：编译配置（目标机型 + 软件包清单）
+- `n60-pro.config`：编译配置（目标机型 + 软件包清单，106 个包）
 - `diy-part1.sh`：第三方源（passwall2、passwall_packages、istore）
 - `diy-part2.sh`：编译后处理（Rust 编译修复；NAS 菜单并入服务；mtwifi 生成默认禁用无线）
 - `files/etc/uci-defaults/99-n60pro-defaults`：首次启动设置（LAN 6.1、关无线、Argon、中文、时区）
@@ -47,8 +43,6 @@
 | 定时重启 | autoreboot（LuCI 里设重启计划，默认不启用） |
 | 自定义命令 | commands（LuCI 里存常用 shell 命令） |
 | 系统 | Argon 主题（默认，中文）、attendedsysupgrade、nlbwmon、ttyd、watchcat、accesscontrol、temp-status |
-
-未包含：Samba / Transmission（NAS 已有）、QoSmate（与 HNAT 互斥）、OpenClash / Nikki / HomeProxy（代理核心只留 PassWall2）、文件浏览器（本版没有）。
 
 效果说明：
 
@@ -96,3 +90,4 @@
 | 2026-11-19 00:00 | 构建 #4（未重编） | 修正包数：100→99（#4 删 ntfs-3g 后实为 99 行，此前误记 100） |
 | 2026-11-19 02:10 | 构建 #5 | 编成（99 包，含 iStore；#6 两项修法已编入；`.bin` 49,449,773 字节，SHA256 `85b5da90…`） |
 | 2026-11-19 08:05 | 构建 #5（未重编） | 同步标准版：加打印机（p910nd + LuCI + kmod-usb-printer）、定时重启、自定义命令、AdGuardHome LuCI（diy-part1 clone）；包数 99→106 |
+| 2026-11-19 08:09 | 构建 #5（未重编） | README 口径调整：删“未包含”与“当前构建”两节，历史记录只留修订记录；README 只说明当前版本 |
