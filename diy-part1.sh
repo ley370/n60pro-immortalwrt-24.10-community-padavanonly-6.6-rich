@@ -24,3 +24,7 @@ grep -q '^src-git passwall2 ' feeds.conf.default || echo 'src-git passwall2 http
 # 依赖 luci-lib-taskd 同在该源里；支持 ipk/opkg，24.10 用 ipk。
 # 跟 main 浮动、不钉哈希，见 B #2 教训）。
 grep -q '^src-git istore ' feeds.conf.default || echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
+# AdGuardHome 的 LuCI 界面（2026-11-19 同步标准版）：rufengsuixing/luci-app-adguardhome v1.8。
+# 24.10 的 feed 里没有 luci-app-adguardhome；作者文档的用法是编译时把仓库 clone 进软件包目录；
+# 与 passwall feed 同样跟 master 浮动、不钉哈希。编译后以 .manifest 中 luci-app-adguardhome 在位为准。
+[ -d package/luci-app-adguardhome ] || git clone --depth 1 https://github.com/rufengsuixing/luci-app-adguardhome.git package/luci-app-adguardhome
