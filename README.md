@@ -12,7 +12,7 @@
 
 ### 当前构建
 
-- #4：99 个包，sysupgrade `.bin` 49,449,773 字节，SHA256 `64530021332a3283147b0006444daeccde54a50ecda70b6ca91e018ecb77b4af`，sha256sums 12/12，manifest 441 行
+- #5：99 个包，sysupgrade `.bin` 49,449,773 字节，SHA256 `85b5da901c81dc4906baf93199f99311c55b878eb2bb122e97c9a27c2cd4f9ed`，sha256sums 12/12，manifest 441 行
 
 ### 默认设置
 
@@ -35,21 +35,24 @@
 | 功能 | 插件与效果 |
 |---|---|
 | 代理 | PassWall2 + sing-box（只留 sing-box 内核）；HAProxy 负载均衡已开，自动切换在 LuCI 里配 |
-| 去广告 | AdGuardHome（无 LuCI 界面，用其自带网页管理） |
+| 去广告 | AdGuardHome + LuCI 界面（diy-part1 clone，v1.8） |
 | 备选去广告 / DNS | adblock、SmartDNS（已装，默认不启用；与 AdGuardHome 二选一，不同时跑） |
 | 加速 | TurboACC-MTK + HNAT + WARP + BBR |
 | 限速 | eqos-mtk；SQM + cake（已装，默认不启用；启用前须关 HNAT） |
 | IPTV | igmpproxy + udpxy；mcproxy（备选，默认不启用） |
 | USB / 磁盘 | block-mount、usb-storage(-uas)、usb3、ext4、f2fs、vfat、exfat、ntfs3（内核）、diskman、hd-idle、parted、e2fsprogs |
+| 打印服务器 | p910nd + LuCI（USB 打印机插上即全网共享，9100 端口） |
 | 应用商店 | iStore（luci-app-store，istore 源） |
 | 网络管理 | arpbind、opkg 界面、vnstat2、statistics、banip、DDNS、UPnP、WoL、WireGuard（luci-proto-wireguard + wireguard-tools） |
+| 定时重启 | autoreboot（LuCI 里设重启计划，默认不启用） |
+| 自定义命令 | commands（LuCI 里存常用 shell 命令） |
 | 系统 | Argon 主题（默认，中文）、attendedsysupgrade、nlbwmon、ttyd、watchcat、accesscontrol、temp-status |
 
 未包含：Samba / Transmission（NAS 已有）、QoSmate（与 HNAT 互斥）、OpenClash / Nikki / HomeProxy（代理核心只留 PassWall2）、文件浏览器（本版没有）。
 
 效果说明：
 
-- AdGuardHome 用其自带网页管理（本版无 LuCI 界面）；只启用一个 init 脚本。
+- AdGuardHome 有 LuCI 界面；该 LuCI 包自带 /etc/init.d/AdGuardHome（大写），与本体 init 并存，刷后核查只启用一个。
 - adblock / SmartDNS / SQM / mcproxy 均为“装而不启用”，默认路径仍是 AdGuardHome + PassWall2 分流。
 - HNAT 硬件加速可能绕过 PassWall2 与 AdGuardHome，须实机验证。
 
@@ -65,8 +68,8 @@
 
 1. 设管理员密码。
 2. 确认无线两个射频均为禁用。
-3. 服务菜单里应有“硬盘休眠”；不应再有顶级 NAS 菜单。
-4. AdGuardHome 用其自带网页管理；只启用一个 init 脚本。
+3. 服务菜单里应有“硬盘休眠”与“p910nd - 打印服务器”；不应再有顶级 NAS 菜单。
+4. AdGuardHome 的 LuCI 界面在位；只启用一个 init 脚本。
 5. PassWall2 自动切换在 LuCI 里配：负载均衡组（leastPing，设为默认节点）或给主节点挂备用节点开自动切换。
 6. 测 HNAT 是否绕过 PassWall2 与 AdGuardHome。
 
@@ -91,3 +94,5 @@
 | 2026-11-18 23:55 | 构建 #4（未重编） | README 按四类范围重组（固件配置 / 功能效果 / 使用方法 / 配置调整变更历史） |
 | 2026-11-18 23:56 | 构建 #4（未重编） | README 增加修订记录（本条） |
 | 2026-11-19 00:00 | 构建 #4（未重编） | 修正包数：100→99（#4 删 ntfs-3g 后实为 99 行，此前误记 100） |
+| 2026-11-19 02:10 | 构建 #5 | 编成（99 包，含 iStore；#6 两项修法已编入；`.bin` 49,449,773 字节，SHA256 `85b5da90…`） |
+| 2026-11-19 08:05 | 构建 #5（未重编） | 同步标准版：加打印机（p910nd + LuCI + kmod-usb-printer）、定时重启、自定义命令、AdGuardHome LuCI（diy-part1 clone）；包数 99→106 |
