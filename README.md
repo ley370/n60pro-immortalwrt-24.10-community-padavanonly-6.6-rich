@@ -42,7 +42,7 @@
 | 网络管理 | arpbind、opkg 界面、vnstat2、statistics、banip、DDNS、UPnP、WoL、WireGuard（luci-proto-wireguard + wireguard-tools） |
 | 定时重启 | autoreboot（LuCI 里设重启计划，默认不启用） |
 | 自定义命令 | commands（LuCI 里存常用 shell 命令） |
-| 系统 | Argon 主题（默认，中文）、attendedsysupgrade、nlbwmon、ttyd、watchcat、accesscontrol、temp-status |
+| 系统 | Argon 主题（默认，中文）、attendedsysupgrade、nlbwmon、ttyd、watchcat |
 
 效果说明：
 
@@ -92,3 +92,4 @@
 | 2026-11-19 08:05 | 构建 #5（未重编） | 同步标准版：加打印机（p910nd + LuCI + kmod-usb-printer）、定时重启、自定义命令、AdGuardHome LuCI（diy-part1 clone）；包数 99→106 |
 | 2026-11-19 08:09 | 构建 #5（未重编） | README 口径调整：删“未包含”与“当前构建”两节，历史记录只留修订记录；README 只说明当前版本 |
 | 2026-11-19 10:13 | 构建 #6 | 编成（106 包，含打印机、定时重启、自定义命令、AdGuardHome LuCI；.bin 49,552,173 字节，SHA256 `13c8a370…`） |
+| 2026-11-20 10:40 | 构建 #6（未重编） | README 修正：系统行删 accesscontrol、temp-status（#6 manifest 450 行核对无此二包） |
